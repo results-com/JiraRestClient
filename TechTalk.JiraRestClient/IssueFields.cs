@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TechTalk.JiraRestClient
 {
-    public class IssueFields
+    public partial class IssueFields
     {
         public IssueFields()
         {

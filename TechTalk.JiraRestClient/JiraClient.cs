@@ -16,7 +16,7 @@ namespace TechTalk.JiraRestClient
     {
         private readonly string username;
         private readonly string password;
-        private readonly JsonDeserializer deserializer;
+        private readonly IDeserializer deserializer;
         private readonly string baseApiUrl;
         public JiraClient(string baseUrl, string username, string password)
         {
@@ -24,7 +24,7 @@ namespace TechTalk.JiraRestClient
             this.password = password;
 
             baseApiUrl = new Uri(new Uri(baseUrl), "rest/api/2/").ToString();
-            deserializer = new JsonDeserializer();
+            deserializer = new Converters.CustomFieldSupportedDeserialiser();
         }
 
         private RestRequest CreateRequest(Method method, String path)
@@ -37,6 +37,10 @@ namespace TechTalk.JiraRestClient
         private IRestResponse ExecuteRequest(RestRequest request)
         {
             var client = new RestClient(baseApiUrl);
+            client.AddHandler("text/json", deserializer);
+            client.AddHandler("application/json", deserializer);
+            client.AddHandler("*+json", deserializer);
+
             return client.Execute(request);
         }
 
