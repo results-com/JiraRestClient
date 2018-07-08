@@ -12,7 +12,7 @@ namespace TechTalk.JiraRestClient
 {
     //JIRA REST API documentation: https://docs.atlassian.com/jira/REST/latest
 
-    public class JiraClient<TIssueFields> : IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
+    public partial class JiraClient<TIssueFields> : IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
     {
         private readonly string username;
         private readonly string password;
@@ -129,6 +129,9 @@ namespace TechTalk.JiraRestClient
 
                 foreach (var item in issues) yield return item;
                 resultCount += issues.Count();
+
+                if (data.total > 0)
+                    Debug.WriteLine("{0:N2} % loaded", Convert.ToDecimal(resultCount * 100) / Convert.ToDecimal(data.total));
 
                 if (resultCount < data.total) continue;
                 else /* all issues received */ break;

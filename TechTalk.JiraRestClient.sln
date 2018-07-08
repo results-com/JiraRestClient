@@ -6,10 +6,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{DD1DD4
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
-		TechTalk.JiraRestClient.nuspec = TechTalk.JiraRestClient.nuspec
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTalk.JiraRestClient", "TechTalk.JiraRestClient\TechTalk.JiraRestClient.csproj", "{210529FA-454E-4C32-A2C8-353ECBD4DA05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTalk.JiraRestClient.Agile", "TechTalk.JiraRestClient\TechTalk.JiraRestClient.Agile.csproj", "{210529FA-454E-4C32-A2C8-353ECBD4DA05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace TechTalk.JiraRestClient
 {
-    public interface IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
+    public partial interface IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
     {
         /// <summary>Returns all issues for the given project</summary>
         IEnumerable<Issue<TIssueFields>> GetIssues(String projectKey);
