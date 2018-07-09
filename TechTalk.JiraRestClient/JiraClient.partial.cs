@@ -269,8 +269,30 @@ namespace TechTalk.JiraRestClient
 			}
 			catch (Exception ex)
 			{
-				Trace.TraceError("GetStatuses() error: {0}", ex);
+				Trace.TraceError("GetFields() error: {0}", ex);
 				throw new JiraClientException("Could not load fields", ex);
+			}
+		}
+
+		/// <summary>Returns all users</summary>
+		public IEnumerable<User> GetUsers()
+		{
+			try
+			{
+				var request = CreateRequest(Method.GET, "user/bulk");
+				request.AddHeader("ContentType", "application/json");
+
+				IRestResponse response = ExecuteRequest(request);
+				AssertStatus(response, HttpStatusCode.OK);
+
+				var data = deserializer.Deserialize<List<User>>(response);
+				return data;
+
+			}
+			catch (Exception ex)
+			{
+				Trace.TraceError("GetUsers() error: {0}", ex);
+				throw new JiraClientException("Could not load users", ex);
 			}
 		}
 	}

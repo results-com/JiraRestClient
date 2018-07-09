@@ -61,6 +61,7 @@
     <Compile Include="Project.cs" />
     <Compile Include="ServerInfo.cs" />
     <Compile Include="SprintIssue.cs" />
+    <Compile Include="User.cs" />
     <Compile Include="Version.cs" />
     <Compile Include="VersionRelatedIssueCounts.cs" />
     <Compile Include="VersionUnresolvedIssueCount.cs" />

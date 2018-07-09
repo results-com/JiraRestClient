@@ -36,5 +36,7 @@ namespace TechTalk.JiraRestClient
 
 		IEnumerable<Field> GetFields();
 
+		/// <summary>Returns all users</summary>
+		IEnumerable<User> GetUsers();
 	}
 }
