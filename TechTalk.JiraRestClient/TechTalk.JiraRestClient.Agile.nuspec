@@ -2,7 +2,7 @@
 <package>
     <metadata>
         <id>Results.TechTalk.JiraRestClient.Agile</id>
-        <version>2.6.0.2</version>
+        <version>2.6.0.3</version>
         <title>JIRA REST Client</title>
         <authors>Results.com and TechTalk</authors>
         <owners></owners>

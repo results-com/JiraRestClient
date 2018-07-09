@@ -38,8 +38,10 @@ namespace TechTalk.JiraRestClient
 
 		private string CreateCommonJql(IEnumerable<string> projectKeys, IEnumerable<string> issueTypes, IEnumerable<string> assignees, IEnumerable<string> statuses, IEnumerable<string> parentIds)
 		{
+			string jql = string.Empty;
 			var projectKeyList = projectKeys == null ? new List<string>() : projectKeys.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
-			var jql = string.Format("project IN ({0})", string.Join(",", projectKeyList));
+			if (projectKeyList.Any())
+				jql = string.Format("project IN ({0})", string.Join(",", projectKeyList));
 			var issueTypeList = issueTypes == null ? new List<string>() : issueTypes.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
 			if (issueTypeList.Any())
 				jql = string.Format("{0} AND issueType IN ({1})", jql, string.Join(",", issueTypeList));
@@ -62,6 +64,8 @@ namespace TechTalk.JiraRestClient
 			}
 			if (!string.IsNullOrWhiteSpace(parentIdJql))
 				jql = jql + parentIdJql;
+			if (jql.StartsWith(" AND "))
+				jql = jql.Substring(5);
 			return jql;
 		}
 
