@@ -61,6 +61,7 @@
     <Compile Include="CommentsContainer.cs" />
     <Compile Include="Compatibility.cs" />
     <Compile Include="Converters\CustomFieldSupportedDeserialiser.cs" />
+    <Compile Include="ResultContainer.cs" />
     <Compile Include="Dashboard.cs" />
     <Compile Include="Fields.cs" />
     <Compile Include="IJiraClient.partial.cs" />

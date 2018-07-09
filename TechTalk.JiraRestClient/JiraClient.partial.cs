@@ -10,16 +10,16 @@ namespace TechTalk.JiraRestClient
 {
 	public partial class JiraClient<TIssueFields>
 	{
-		public IEnumerable<Issue<TIssueFields>> GetIssues(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees = null, string parentId = null, Func<Issue<TIssueFields>, bool> filter = null)
+		public IEnumerable<Issue<TIssueFields>> GetIssues(IEnumerable<string> projectKeys = null, IEnumerable<string> issueTypes = null, IEnumerable<string> assignees = null, IEnumerable<string> statuses = null, IEnumerable<string> parentIds = null, Func<Issue<TIssueFields>, bool> filter = null)
 		{
-			return EnumerateIssues(projectKey, issueTypes, assignees, parentId, filter).ToList();
+			return EnumerateIssues(projectKeys, issueTypes, assignees, statuses, parentIds, filter).ToList();
 		}
 
-		public IEnumerable<Issue<TIssueFields>> EnumerateIssues(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees, string parentId, Func<Issue<TIssueFields>, bool> filter = null)
+		public IEnumerable<Issue<TIssueFields>> EnumerateIssues(IEnumerable<string> projectKeys, IEnumerable<string> issueTypes, IEnumerable<string> assignees = null, IEnumerable<string> statuses = null, IEnumerable<string> parentIds = null, Func<Issue<TIssueFields>, bool> filter = null)
 		{
 			try
 			{
-				IEnumerable<Issue<TIssueFields>> result = EnumerateIssues(projectKey, issueTypes, assignees, parentId, false);
+				IEnumerable<Issue<TIssueFields>> result = EnumerateIssues(projectKeys, issueTypes, assignees, statuses, parentIds, false);
 				if (filter != null)
 					result = result.Where(filter);
 				return result;
@@ -31,40 +31,55 @@ namespace TechTalk.JiraRestClient
 			}
 		}
 
-		public IEnumerable<Issue<TIssueFields>> EnumerateIssues(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees, string parentId, bool keyFieldsOnly = false)
+		public IEnumerable<Issue<TIssueFields>> EnumerateIssues(IEnumerable<string> projectKeys, IEnumerable<string> issueTypes, IEnumerable<string> assignees, IEnumerable<string> statuses, IEnumerable<string> parentIds, bool keyFieldsOnly = false)
 		{
-			return EnumerateIssuesByQuery(CreateCommonJql(projectKey, issueTypes, assignees, parentId), null, 0);
+			return EnumerateIssuesByQuery(CreateCommonJql(projectKeys, issueTypes, assignees, statuses, parentIds), null, 0);
 		}
 
-		private string CreateCommonJql(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees, string parentId)
+		private string CreateCommonJql(IEnumerable<string> projectKeys, IEnumerable<string> issueTypes, IEnumerable<string> assignees, IEnumerable<string> statuses, IEnumerable<string> parentIds)
 		{
-			var jql = string.Format("project={0}", projectKey);
-			var issueTypeList = issueTypes == null ? new List<string>() : issueTypes.ToList();
-			var assigneesList = assignees == null ? new List<string>() : assignees.ToList();
+			var projectKeyList = projectKeys == null ? new List<string>() : projectKeys.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
+			var jql = string.Format("project IN ({0})", string.Join(",", projectKeyList));
+			var issueTypeList = issueTypes == null ? new List<string>() : issueTypes.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
 			if (issueTypeList.Any())
 				jql = string.Format("{0} AND issueType IN ({1})", jql, string.Join(",", issueTypeList));
-			if (assigneesList.Any())
-				jql = string.Format("{0} AND assignee IN ({1})", jql, string.Join(",", assigneesList));
-			if (!string.IsNullOrWhiteSpace(parentId))
-				jql = string.Format("{0} AND cf[{1}]={2}", jql, GetFields().Single(field => field.name == "Epic Link").schema["customId"], parentId);
+			var assigneeList = assignees == null ? new List<string>() : assignees.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
+			if (assigneeList.Any())
+				jql = string.Format("{0} AND assignee IN ({1})", jql, string.Join(",", assigneeList));
+			var statusList = statuses == null ? new List<string>() : statuses.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
+			if (statusList.Any())
+				jql = string.Format("{0} AND status IN ({1})", jql, string.Join(",", statusList));
+			var parentIdList = parentIds == null ? new List<string>() : parentIds.Select(x => string.Compare(x, "in", StringComparison.InvariantCultureIgnoreCase) == 0 ? string.Concat("\"", x, "\"") : x).ToList();
+			string parentIdJql = null;
+			string epicFieldName = GetFields().Single(field => field.name == "Epic Link").schema["customId"];
+			foreach (string parentId in parentIdList)
+			{
+				if (string.IsNullOrWhiteSpace(parentId))
+					continue;
+				if (!string.IsNullOrWhiteSpace(parentIdJql))
+					parentIdJql = parentIdJql + " AND";
+				parentIdJql = string.Format("{0} cf[{1}]={2}", parentIdJql, epicFieldName, parentId);
+			}
+			if (!string.IsNullOrWhiteSpace(parentIdJql))
+				jql = jql + parentIdJql;
 			return jql;
 		}
 
 		public int GetIssueCount(string projectKey, string issueType, IEnumerable<string> assignees = null, string parentId = null, Func<Issue<TIssueFields>, bool> filter = null)
 		{
-			return GetIssueCount(projectKey, issueType == null ? null : new[] { issueType }, assignees, parentId, filter);
+			return GetIssueCount(projectKey, issueType == null ? null : new[] {issueType}, assignees, null, new[] {parentId}, filter);
 		}
 
-		public int GetIssueCount(string projectKey, IEnumerable<string> issueTypes = null, IEnumerable<string> assignees = null, string parentId = null, Func<Issue<TIssueFields>, bool> filter = null)
+		public int GetIssueCount(string projectKey, IEnumerable<string> issueTypes = null, IEnumerable<string> assignees = null, IEnumerable<string> statuses = null, IEnumerable<string> parentIds = null , Func<Issue<TIssueFields>, bool> filter = null)
 		{
-			return TotalIssuesInternal(projectKey, issueTypes, assignees, parentId, filter);
+			return TotalIssuesInternal(projectKey, issueTypes, assignees, statuses, parentIds, filter);
 		}
 
-		private int TotalIssuesInternal(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees, string parentId, Func<Issue<TIssueFields>, bool> filter)
+		private int TotalIssuesInternal(string projectKey, IEnumerable<string> issueTypes, IEnumerable<string> assignees, IEnumerable<string> statuses, IEnumerable<string> parentIds, Func<Issue<TIssueFields>, bool> filter)
 		{
 			if (filter != null)
 			{
-				return EnumerateIssues(projectKey, issueTypes, assignees, parentId, true)
+				return EnumerateIssues(new []{projectKey}, issueTypes, assignees, statuses, parentIds, true)
 					.Count(filter);
 			}
 
@@ -72,11 +87,7 @@ namespace TechTalk.JiraRestClient
 			const int queryStart = 0;
 			while (true)
 			{
-				var jql = string.Format("project={0}", projectKey);
-				if (issueTypes != null && issueTypes.Any())
-					jql += string.Format(" AND issueType IN({0})", issueTypes);
-				if (!string.IsNullOrWhiteSpace(parentId))
-					jql = string.Format("{0} AND cf[{1}]={2}", jql, GetFields().Single(field => field.name == "Epic Link").schema["customId"], parentId);
+				var jql = CreateCommonJql(new []{projectKey}, issueTypes, assignees, statuses, parentIds);
 				var path = string.Format("search?jql={0}&startAt={1}&maxResults={2}", Uri.EscapeUriString(jql), queryStart, queryCount);
 				RestRequest request = CreateRequest(Method.GET, path);
 
@@ -275,17 +286,21 @@ namespace TechTalk.JiraRestClient
 		}
 
 		/// <summary>Returns all users</summary>
-		public IEnumerable<User> GetUsers()
+		public IEnumerable<User> GetUsers(IEnumerable<string> projectKeys)
 		{
 			try
 			{
-				var request = CreateRequest(Method.GET, "user/bulk");
+				string path = "user/search/query?query=";
+				string uql = "";
+				if (projectKeys != null)
+					uql = string.Format("is assignee of ({0})", string.Join(",", projectKeys));
+				var request = CreateRequest(Method.GET, string.Concat(path, Uri.EscapeUriString(uql)));
 				request.AddHeader("ContentType", "application/json");
 
 				IRestResponse response = ExecuteRequest(request);
 				AssertStatus(response, HttpStatusCode.OK);
 
-				var data = deserializer.Deserialize<List<User>>(response);
+				List<User> data = deserializer.Deserialize<ResultContainer<User>>(response).values;
 				return data;
 
 			}
